@@ -43,7 +43,8 @@ class UserValidatorTest {
         user.setName("Name");
         user.setBirthday(LocalDate.of(1990, 1, 1));
 
-        Set<ConstraintViolation<User>> violations = validator.validate(user);
+        // Валидация с группой OnCreate, так как @NotBlank применяется только к ней
+        Set<ConstraintViolation<User>> violations = validator.validate(user, User.OnCreate.class);
 
         assertFalse(violations.isEmpty());
         assertTrue(violations.stream().anyMatch(v ->
@@ -59,7 +60,8 @@ class UserValidatorTest {
         user.setName("Name");
         user.setBirthday(LocalDate.of(1990, 1, 1));
 
-        Set<ConstraintViolation<User>> violations = validator.validate(user);
+        // Валидация с группой OnCreate (или OnUpdate, так как @Email применяется к обеим)
+        Set<ConstraintViolation<User>> violations = validator.validate(user, User.OnCreate.class);
 
         assertFalse(violations.isEmpty());
         assertTrue(violations.stream().anyMatch(v ->
