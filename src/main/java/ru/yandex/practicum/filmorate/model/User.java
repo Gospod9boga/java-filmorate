@@ -32,6 +32,9 @@ public class User {
     @Past(message = "Birthday must be in the past")
     private LocalDate birthday;
 
-    public interface OnCreate {}
-    public interface OnUpdate {}
+    public interface OnCreate {
+    }
+
+    public interface OnUpdate {
+    }
 }
