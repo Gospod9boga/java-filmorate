@@ -8,6 +8,8 @@ import lombok.Setter;
 import lombok.ToString;
 
 import java.time.LocalDate;
+import java.util.HashSet;
+import java.util.Set;
 
 @Getter
 @Setter
@@ -31,6 +33,8 @@ public class User {
     @NotNull(message = "Birthday cannot be null")
     @Past(message = "Birthday must be in the past")
     private LocalDate birthday;
+
+    private Set<Long> friends = new HashSet<>();
 
     public interface OnCreate {
     }

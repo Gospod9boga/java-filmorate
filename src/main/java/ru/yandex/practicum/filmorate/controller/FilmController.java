@@ -2,69 +2,81 @@ package ru.yandex.practicum.filmorate.controller;
 
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import ru.yandex.practicum.filmorate.ValidationException.EntityNotFoundException;
 import ru.yandex.practicum.filmorate.ValidationException.ValidationException;
+import ru.yandex.practicum.filmorate.dto.ErrorResponse;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.service.FilmService;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @Slf4j
 @RestController
 @RequestMapping("/films")
 public class FilmController {
 
+    private final FilmService filmService;
+
     private static final LocalDate EARLIEST_RELEASE_DATE = LocalDate.of(1895, 12, 28);
 
-    private Map<Long, Film> films = new HashMap<>();
-    private long nextId = 1;
+    public FilmController(FilmService filmService) {
+        this.filmService = filmService;
+    }
 
     @PostMapping
     public Film createFilm(@Valid @RequestBody Film film) {
         log.info("Create film: {}", film);
 
         validateReleaseDate(film.getReleaseDate());
-        film.setId(getNextId());
-        films.put(film.getId(), film);
-        return film;
+        return filmService.create(film);
     }
 
-    @GetMapping("/{filmId}")
-    public Film getFilmById(@PathVariable long filmId) {
-        log.info("Get film by id={}", filmId);
+    @GetMapping("/{id}")
+    public Film getFilmById(@PathVariable Long id) {
+        log.info("Get film by id={}", id);
 
-        Film film = films.get(filmId);
-        if (film == null) {
-            throw new ValidationException("Film with id = " + filmId + " was not found");
-        }
+        Film film = filmService.get(id);
+
         return film;
     }
 
     @GetMapping
     public List<Film> getFilms() {
-        log.info("Get films, count: {}", films.size());
-        return new ArrayList<>(films.values());
+        log.info("Get films, count: {}", filmService.getAll().size());
+        return filmService.getAll();
     }
 
     @PutMapping
     public Film updateFilm(@Valid @RequestBody Film film) {
         log.info("Update film: {}", film);
-
         validateReleaseDate(film.getReleaseDate());
 
-        if (film.getId() == null || !films.containsKey(film.getId())) {
-            throw new ValidationException("Film with id = " + film.getId() + " was not found");
-        }
-
-        films.put(film.getId(), film);
-        return film;
+        return filmService.updateFilm(film);
     }
 
-    private long getNextId() {
-        return nextId++;
+
+    @PutMapping("/{id}/like/{userId}")
+    public void addLike(@PathVariable Long id, @PathVariable Long userId) {
+        log.info("User {} likes film {}", userId, id);
+
+        filmService.addLike(id, userId);
+    }
+
+    @DeleteMapping("/{id}/like/{userId}")
+    public void removeLike(@PathVariable Long id, @PathVariable Long userId) {
+        log.info("User {} removes like from film {}", userId, id);
+
+        filmService.removeLike(id, userId);
+    }
+
+    @GetMapping("/popular")
+    public List<Film> getPopularFilms(@RequestParam(defaultValue = "10") int count) {
+        log.info("Get popular films, count: {}", count);
+        return filmService.getPopularFilms(count);
     }
 
     private void validateReleaseDate(LocalDate releaseDate) {
@@ -72,4 +84,18 @@ public class FilmController {
             throw new ValidationException("Release date cannot be earlier than December 28, 1895");
         }
     }
+
+
+    @ExceptionHandler(EntityNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleNotFound(EntityNotFoundException e) {
+        ErrorResponse errorResponse = new ErrorResponse(e.getMessage());
+        return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(ValidationException.class)
+    public ResponseEntity<ErrorResponse> handleBadRequest(ValidationException e) {
+        ErrorResponse errorResponse = new ErrorResponse(e.getMessage());
+        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+    }
+
 }

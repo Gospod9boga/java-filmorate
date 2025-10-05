@@ -7,6 +7,8 @@ import lombok.Setter;
 import lombok.ToString;
 
 import java.time.LocalDate;
+import java.util.HashSet;
+import java.util.Set;
 
 @Getter
 @Setter
@@ -28,6 +30,8 @@ public class Film {
 
     @Positive(message = "Duration must be positive")
     private int duration;
+
+    private Set<Long> likes = new HashSet<>();
 
     public Film() {
     }
