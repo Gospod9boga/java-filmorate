@@ -74,10 +74,10 @@ public class FilmServiceImpl implements FilmService {
 
     @Override
     public List<Film> getPopularFilms(int count) {
-        return filmStorage.getAll().stream()
-                .sorted(Comparator.comparingInt((Film f) -> f.getLikes().size()).reversed())
-                .limit(count)
-                .collect(Collectors.toList());
+        if (count <= 0) {
+            throw new ValidationException("Count must be positive");
+        }
+        return filmStorage.getPopularFilms(count); 
     }
 
     private Film getFilm(long filmId) {
