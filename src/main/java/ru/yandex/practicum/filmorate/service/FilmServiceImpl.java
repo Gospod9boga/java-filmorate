@@ -7,9 +7,8 @@ import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
-import java.util.Comparator;
 import java.util.List;
-import java.util.stream.Collectors;
+
 
 @Service
 public class FilmServiceImpl implements FilmService {
@@ -77,7 +76,7 @@ public class FilmServiceImpl implements FilmService {
         if (count <= 0) {
             throw new ValidationException("Count must be positive");
         }
-        return filmStorage.getPopularFilms(count); 
+        return filmStorage.getPopularFilms(count);
     }
 
     private Film getFilm(long filmId) {
@@ -94,6 +93,3 @@ public class FilmServiceImpl implements FilmService {
         }
     }
 }
-
-
-
