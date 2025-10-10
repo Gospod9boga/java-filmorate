@@ -1,5 +1,6 @@
 package ru.yandex.practicum.filmorate.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -7,6 +8,8 @@ import lombok.Setter;
 import lombok.ToString;
 
 import java.time.LocalDate;
+import java.util.HashSet;
+import java.util.Set;
 
 @Getter
 @Setter
@@ -28,6 +31,9 @@ public class Film {
 
     @Positive(message = "Duration must be positive")
     private int duration;
+
+    @JsonIgnore
+    private Set<Long> likes = new HashSet<>();
 
     public Film() {
     }
