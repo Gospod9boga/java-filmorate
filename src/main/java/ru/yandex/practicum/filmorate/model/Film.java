@@ -1,22 +1,20 @@
 package ru.yandex.practicum.filmorate.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.validation.constraints.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.*;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Getter
 @Setter
 @AllArgsConstructor
+@NoArgsConstructor
 @ToString
 public class Film {
-
     private Long id;
 
     @NotBlank(message = "Name must not be blank")
@@ -26,15 +24,12 @@ public class Film {
     private String description;
 
     @NotNull(message = "Release date must not be null")
-    @PastOrPresent(message = "Release date must be in the past or present")
     private LocalDate releaseDate;
 
     @Positive(message = "Duration must be positive")
     private int duration;
 
-    @JsonIgnore
     private Set<Long> likes = new HashSet<>();
-
-    public Film() {
-    }
+    private List<Genre> genres = new ArrayList<>();
+    private Mpa mpa;
 }
