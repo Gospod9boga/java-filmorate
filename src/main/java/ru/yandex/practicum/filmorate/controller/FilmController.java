@@ -30,6 +30,7 @@ public class FilmController {
     @PostMapping
     public Film createFilm(@Valid @RequestBody Film film) {
         log.info("Create film: {}", film);
+        validateReleaseDate(film.getReleaseDate());
         return filmService.create(film);
     }
 
