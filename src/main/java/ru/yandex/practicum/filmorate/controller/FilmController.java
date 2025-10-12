@@ -30,8 +30,6 @@ public class FilmController {
     @PostMapping
     public Film createFilm(@Valid @RequestBody Film film) {
         log.info("Create film: {}", film);
-
-        validateReleaseDate(film.getReleaseDate());
         return filmService.create(film);
     }
 
@@ -82,6 +80,9 @@ public class FilmController {
     private void validateReleaseDate(LocalDate releaseDate) {
         if (releaseDate.isBefore(EARLIEST_RELEASE_DATE)) {
             throw new ValidationException("Release date cannot be earlier than December 28, 1895");
+        }
+        if (releaseDate.isAfter(LocalDate.now())) {
+            throw new ValidationException("Release date cannot be in the future");
         }
     }
 

@@ -24,6 +24,7 @@ public class Film {
     private String description;
 
     @NotNull(message = "Release date must not be null")
+    @PastOrPresent(message = "Release date must be in the past or present")
     private LocalDate releaseDate;
 
     @Positive(message = "Duration must be positive")
