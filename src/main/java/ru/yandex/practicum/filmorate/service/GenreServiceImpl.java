@@ -1,12 +1,16 @@
 package ru.yandex.practicum.filmorate.service;
 
-
 import org.springframework.stereotype.Service;
+
 import ru.yandex.practicum.filmorate.ValidationException.EntityNotFoundException;
 import ru.yandex.practicum.filmorate.model.Genre;
+
+import java.util.Collection;
+
 import ru.yandex.practicum.filmorate.storage.GenreStorage;
 
 import java.util.List;
+
 
 @Service
 public class GenreServiceImpl implements GenreService {
@@ -24,11 +28,13 @@ public class GenreServiceImpl implements GenreService {
 
     @Override
     public Genre findById(Long id) {
-        if (id == null || id <= 0) {
-            throw new EntityNotFoundException("ID жанра должен быть положительным числом");
-        }
-
         return genreStorage.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Жанр с ID " + id + " не найден"));
     }
+
+    @Override
+    public List<Genre> findAllByIds(Collection<Long> ids) {
+        return genreStorage.findAllByIds(ids);
+    }
+
 }

@@ -23,9 +23,6 @@ public class MpaServiceImpl implements MpaService {
 
     @Override
     public Mpa findById(Long id) {
-        if (id == null || id <= 0) {
-            throw new EntityNotFoundException("ID MPA рейтинга должен быть положительным числом");
-        }
 
         return mpaStorage.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("MPA рейтинг с ID " + id + " не найден"));

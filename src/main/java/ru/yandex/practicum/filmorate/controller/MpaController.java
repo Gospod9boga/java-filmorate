@@ -1,17 +1,16 @@
 package ru.yandex.practicum.filmorate.controller;
 
+import jakarta.validation.constraints.Positive;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.filmorate.ValidationException.EntityNotFoundException;
-import ru.yandex.practicum.filmorate.dto.ErrorResponse;
 import ru.yandex.practicum.filmorate.model.Mpa;
 import ru.yandex.practicum.filmorate.service.MpaService;
 
 import java.util.List;
 
 @Slf4j
+@Validated
 @RestController
 @RequestMapping("/mpa")
 public class MpaController {
@@ -29,16 +28,8 @@ public class MpaController {
     }
 
     @GetMapping("/{id}")
-    public Mpa findById(@PathVariable Long id) {
+    public Mpa findById(@PathVariable @Positive Long id) {
         log.info("Получение MPA рейтинга с ID: {}", id);
         return mpaService.findById(id);
     }
-
-    @ExceptionHandler(EntityNotFoundException.class)
-    public ResponseEntity<ErrorResponse> handleNotFound(EntityNotFoundException e) {
-        log.error("Объект не найден: {}", e.getMessage());
-        ErrorResponse errorResponse = new ErrorResponse(e.getMessage());
-        return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
-    }
-
 }

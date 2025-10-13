@@ -49,7 +49,7 @@ public class UserDbStorage implements UserStorage {
         List<User> users = jdbcTemplate.query(sql, userMapper);
 
         for (User user : users) {
-            loadFriends(user);
+
         }
 
         return users;
@@ -75,7 +75,7 @@ public class UserDbStorage implements UserStorage {
             User user = users.stream().findFirst().orElse(null);
 
             if (user != null) {
-                loadFriends(user);
+
             }
 
             return Optional.ofNullable(user);
@@ -104,7 +104,7 @@ public class UserDbStorage implements UserStorage {
         List<User> friends = jdbcTemplate.query(sql, userMapper, userId);
 
         for (User friend : friends) {
-            loadFriends(friend);
+
         }
 
         return friends;
@@ -119,17 +119,13 @@ public class UserDbStorage implements UserStorage {
         List<User> commonFriends = jdbcTemplate.query(sql, userMapper, userId, otherId);
 
         for (User friend : commonFriends) {
-            loadFriends(friend);
+
         }
 
         return commonFriends;
     }
 
-    private void loadFriends(User user) {
-        String sql = "SELECT friend_id FROM friends WHERE user_id = ?";
-        List<Long> friendIds = jdbcTemplate.query(sql, (rs, rowNum) -> rs.getLong("friend_id"), user.getId());
-        user.getFriends().addAll(friendIds);
-    }
+
 
     private User mapRowToUser(ResultSet rs, int rowNum) throws SQLException {
         User user = new User();

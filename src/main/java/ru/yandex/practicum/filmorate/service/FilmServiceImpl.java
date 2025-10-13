@@ -7,12 +7,15 @@ import ru.yandex.practicum.filmorate.ValidationException.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.Mpa;
-import ru.yandex.practicum.filmorate.model.User;
+
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
 import java.util.List;
 import java.util.Optional;
+
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 public class FilmServiceImpl implements FilmService {
@@ -44,15 +47,8 @@ public class FilmServiceImpl implements FilmService {
 
     @Override
     public Film get(long id) {
-        if (id <= 0) {
-            throw new ValidationException("ID фильма должен быть положительным числом");
-        }
-
-        Optional<Film> filmOptional = filmStorage.get(id);
-        if (!filmOptional.isPresent()) {
-            throw new EntityNotFoundException("Фильм с ID " + id + " не найден");
-        }
-        return filmOptional.get();
+        return filmStorage.get(id)
+                .orElseThrow(() -> new EntityNotFoundException("Фильм с ID " + id + " не найден"));
     }
 
     @Override
@@ -75,42 +71,24 @@ public class FilmServiceImpl implements FilmService {
     }
 
     @Override
-    public void addLike(long filmId, long userId) {
-        if (filmId <= 0 || userId <= 0) {
-            throw new ValidationException("ID фильма и пользователя должны быть положительными числами");
-        }
-
+    public void addLike(long filmId, long userId) throws Throwable {
         get(filmId);
-
-        Optional<User> userOptional = userStorage.getUser(userId);
-        if (!userOptional.isPresent()) {
-            throw new EntityNotFoundException("Пользователь с ID " + userId + " не найден");
-        }
-
+        userStorage.getUser(userId)
+                .orElseThrow(() -> new EntityNotFoundException("Пользователь с ID " + userId + " не найден"));
         filmStorage.addLike(filmId, userId);
     }
 
     @Override
-    public void removeLike(long filmId, long userId) {
-        if (filmId <= 0 || userId <= 0) {
-            throw new ValidationException("ID фильма и пользователя должны быть положительными числами");
-        }
-
+    public void removeLike(long filmId, long userId) throws Throwable {
         get(filmId);
-
-        Optional<User> userOptional = userStorage.getUser(userId);
-        if (!userOptional.isPresent()) {
-            throw new EntityNotFoundException("Пользователь с ID " + userId + " не найден");
-        }
-
+        userStorage.getUser(userId)
+                .orElseThrow(() -> new EntityNotFoundException("Пользователь с ID " + userId + " не найден"));
         filmStorage.removeLike(filmId, userId);
     }
 
     @Override
     public List<Film> getPopularFilms(int count) {
-        if (count <= 0) {
-            throw new ValidationException("Количество фильмов должно быть положительным числом");
-        }
+
         return filmStorage.getPopularFilms(count);
     }
 
@@ -129,12 +107,28 @@ public class FilmServiceImpl implements FilmService {
 
     private void validateGenres(List<Genre> genres) {
         if (genres != null && !genres.isEmpty()) {
-            for (Genre genre : genres) {
-                if (genre.getId() == null) {
-                    throw new ValidationException("ID жанра не может быть пустым");
-                }
 
-                genreService.findById(genre.getId());
+            Set<Long> genreIds = genres.stream()
+                    .map(Genre::getId)
+                    .collect(Collectors.toSet());
+
+
+            if (genreIds.contains(null)) {
+                throw new ValidationException("ID жанра не может быть пустым");
+            }
+
+
+            List<Genre> existingGenres = genreService.findAllByIds(genreIds);
+
+
+            if (existingGenres.size() != genreIds.size()) {
+                Set<Long> existingIds = existingGenres.stream()
+                        .map(Genre::getId)
+                        .collect(Collectors.toSet());
+                Set<Long> missingIds = genreIds.stream()
+                        .filter(id -> !existingIds.contains(id))
+                        .collect(Collectors.toSet());
+                throw new EntityNotFoundException("Жанры с ID " + missingIds + " не найдены");
             }
         }
     }

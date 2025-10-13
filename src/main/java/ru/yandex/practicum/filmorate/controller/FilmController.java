@@ -1,13 +1,11 @@
 package ru.yandex.practicum.filmorate.controller;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Positive;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.filmorate.ValidationException.EntityNotFoundException;
 import ru.yandex.practicum.filmorate.ValidationException.ValidationException;
-import ru.yandex.practicum.filmorate.dto.ErrorResponse;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.FilmService;
 
@@ -15,6 +13,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 @Slf4j
+@Validated
 @RestController
 @RequestMapping("/films")
 public class FilmController {
@@ -35,7 +34,7 @@ public class FilmController {
     }
 
     @GetMapping("/{id}")
-    public Film getFilmById(@PathVariable Long id) {
+    public Film getFilmById(@PathVariable @Positive Long id) {
         log.info("Get film by id={}", id);
 
         Film film = filmService.get(id);
@@ -57,23 +56,27 @@ public class FilmController {
         return filmService.updateFilm(film);
     }
 
-
     @PutMapping("/{id}/like/{userId}")
-    public void addLike(@PathVariable Long id, @PathVariable Long userId) {
+    public void addLike(
+            @PathVariable @Positive Long id,
+            @PathVariable @Positive Long userId) throws Throwable {
         log.info("User {} likes film {}", userId, id);
 
         filmService.addLike(id, userId);
     }
 
     @DeleteMapping("/{id}/like/{userId}")
-    public void removeLike(@PathVariable Long id, @PathVariable Long userId) {
+    public void removeLike(
+            @PathVariable @Positive Long id,
+            @PathVariable @Positive Long userId) throws Throwable {
         log.info("User {} removes like from film {}", userId, id);
 
         filmService.removeLike(id, userId);
     }
 
     @GetMapping("/popular")
-    public List<Film> getPopularFilms(@RequestParam(defaultValue = "10") int count) {
+    public List<Film> getPopularFilms(
+            @RequestParam(defaultValue = "10") @Positive int count) {
         log.info("Get popular films, count: {}", count);
         return filmService.getPopularFilms(count);
     }
@@ -86,18 +89,4 @@ public class FilmController {
             throw new ValidationException("Release date cannot be in the future");
         }
     }
-
-
-    @ExceptionHandler(EntityNotFoundException.class)
-    public ResponseEntity<ErrorResponse> handleNotFound(EntityNotFoundException e) {
-        ErrorResponse errorResponse = new ErrorResponse(e.getMessage());
-        return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
-    }
-
-    @ExceptionHandler(ValidationException.class)
-    public ResponseEntity<ErrorResponse> handleBadRequest(ValidationException e) {
-        ErrorResponse errorResponse = new ErrorResponse(e.getMessage());
-        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
-    }
-
 }

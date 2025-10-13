@@ -1,20 +1,19 @@
 package ru.yandex.practicum.filmorate.controller;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Positive;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.ValidationException.ValidationException;
 import ru.yandex.practicum.filmorate.ValidationException.EntityNotFoundException;
-import ru.yandex.practicum.filmorate.dto.ErrorResponse;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.UserService;
 
 import java.util.List;
 
 @Slf4j
+@Validated  
 @RestController
 @RequestMapping("/users")
 public class UserController {
@@ -41,11 +40,10 @@ public class UserController {
     }
 
     @GetMapping("/{id}")
-    public User getUserById(@PathVariable Long id) {
+    public User getUserById(@PathVariable @Positive Long id) {
         log.info("Get user by id: {}", id);
-        if (id == null) {
-            throw new ValidationException("User id cannot be null");
-        }
+
+
         User user = userService.getUser(id);
         if (user == null) {
             throw new EntityNotFoundException("User with id = " + id + " was not found");
@@ -56,9 +54,7 @@ public class UserController {
     @PutMapping
     public User updateUser(@Valid @RequestBody User user) {
         log.info("Update user: {}", user);
-        if (user.getId() == null) {
-            throw new ValidationException("User id cannot be null");
-        }
+
         if (userService.getUser(user.getId()) == null) {
             throw new EntityNotFoundException("User with id = " + user.getId() + " was not found");
         }
@@ -68,11 +64,12 @@ public class UserController {
     }
 
     @PutMapping("/{id}/friends/{friendId}")
-    public void addFriend(@PathVariable Long id, @PathVariable Long friendId) {
+    public void addFriend(
+            @PathVariable @Positive Long id,
+            @PathVariable @Positive Long friendId) {
         log.info("User {} adds friend {}", id, friendId);
-        if (id == null || friendId == null) {
-            throw new ValidationException("User id and friend id cannot be null");
-        }
+
+
         if (userService.getUser(id) == null) {
             throw new EntityNotFoundException("User with id = " + id + " was not found");
         }
@@ -83,11 +80,12 @@ public class UserController {
     }
 
     @DeleteMapping("/{id}/friends/{friendId}")
-    public void removeFriend(@PathVariable Long id, @PathVariable Long friendId) {
+    public void removeFriend(
+            @PathVariable @Positive Long id,
+            @PathVariable @Positive Long friendId) {
         log.info("User {} removes friend {}", id, friendId);
-        if (id == null || friendId == null) {
-            throw new ValidationException("User id and friend id cannot be null");
-        }
+
+
         if (userService.getUser(id) == null) {
             throw new EntityNotFoundException("User with id = " + id + " was not found");
         }
@@ -98,11 +96,10 @@ public class UserController {
     }
 
     @GetMapping("/{id}/friends")
-    public List<User> getFriends(@PathVariable Long id) {
+    public List<User> getFriends(@PathVariable @Positive Long id) {
         log.info("Get friends of user {}", id);
-        if (id == null) {
-            throw new ValidationException("User id cannot be null");
-        }
+
+
         if (userService.getUser(id) == null) {
             throw new EntityNotFoundException("User with id = " + id + " was not found");
         }
@@ -110,11 +107,12 @@ public class UserController {
     }
 
     @GetMapping("/{id}/friends/common/{otherId}")
-    public List<User> getCommonFriends(@PathVariable Long id, @PathVariable Long otherId) {
+    public List<User> getCommonFriends(
+            @PathVariable @Positive Long id,
+            @PathVariable @Positive Long otherId) {
         log.info("Get common friends of users {} and {}", id, otherId);
-        if (id == null || otherId == null) {
-            throw new ValidationException("User ids cannot be null");
-        }
+
+
         if (userService.getUser(id) == null) {
             throw new EntityNotFoundException("User with id = " + id + " was not found");
         }
@@ -129,18 +127,4 @@ public class UserController {
             user.setName(user.getLogin());
         }
     }
-
-    @ExceptionHandler
-    public ResponseEntity<ErrorResponse> handleNotFound(EntityNotFoundException e) {
-        ErrorResponse errorResponse = new ErrorResponse(e.getMessage());
-        return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
-    }
-
-    @ExceptionHandler
-    public ResponseEntity<ErrorResponse> handleBadRequest(ValidationException e) {
-        ErrorResponse errorResponse = new ErrorResponse(e.getMessage());
-        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
-    }
 }
-
-

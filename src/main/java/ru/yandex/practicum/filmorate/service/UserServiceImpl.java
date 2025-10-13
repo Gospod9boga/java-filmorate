@@ -22,7 +22,6 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public User createUser(User user) {
-
         return storage.createUser(user);
     }
 
@@ -33,20 +32,13 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public User updateUser(User user) {
-        if (user.getId() == null || user.getId() <= 0) {
-            throw new ValidationException("ID пользователя должен быть указан и положительным");
-        }
 
-
-        getUser(user.getId());
         return storage.updateUser(user);
     }
 
     @Override
     public User getUser(Long id) {
-        if (id == null || id <= 0) {
-            throw new ValidationException("ID пользователя должен быть положительным числом");
-        }
+
 
         Optional<User> userOptional = storage.getUser(id);
         if (!userOptional.isPresent()) {
@@ -57,9 +49,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void addFriend(long userId, long friendId) {
-        if (userId <= 0 || friendId <= 0) {
-            throw new ValidationException("ID пользователей должны быть положительными числами");
-        }
+
 
         if (userId == friendId) {
             throw new ValidationException("Пользователь не может добавить себя в друзья");
@@ -73,9 +63,6 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void removeFriend(long userId, long friendId) {
-        if (userId <= 0 || friendId <= 0) {
-            throw new ValidationException("ID пользователей должны быть положительными числами");
-        }
 
         getUser(userId);
         getUser(friendId);
@@ -85,9 +72,6 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public List<User> getFriends(long userId) {
-        if (userId <= 0) {
-            throw new ValidationException("ID пользователя должен быть положительным числом");
-        }
 
         getUser(userId);
 
@@ -96,9 +80,6 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public List<User> getCommonFriends(long userId, long otherId) {
-        if (userId <= 0 || otherId <= 0) {
-            throw new ValidationException("ID пользователей должны быть положительными числами");
-        }
 
         getUser(userId);
         getUser(otherId);
