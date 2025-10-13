@@ -96,7 +96,7 @@ public class FilmDbStorage implements FilmStorage {
             String sql = "SELECT f.*, m.name as mpa_name FROM films f " +
                     "LEFT JOIN mpa_ratings m ON f.mpa_rating_id = m.id";
             List<Film> films = jdbcTemplate.query(sql, FilmDbStorage::mapRowToFilm);
-            
+
             loadGenresForAllFilms(films);
             loadLikesForAllFilms(films);
 
