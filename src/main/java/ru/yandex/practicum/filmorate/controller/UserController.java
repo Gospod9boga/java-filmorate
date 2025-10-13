@@ -5,7 +5,6 @@ import jakarta.validation.constraints.Positive;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.filmorate.ValidationException.ValidationException;
 import ru.yandex.practicum.filmorate.ValidationException.EntityNotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.UserService;
@@ -13,7 +12,7 @@ import ru.yandex.practicum.filmorate.service.UserService;
 import java.util.List;
 
 @Slf4j
-@Validated  
+@Validated
 @RestController
 @RequestMapping("/users")
 public class UserController {
