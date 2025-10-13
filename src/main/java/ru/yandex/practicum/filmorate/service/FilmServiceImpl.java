@@ -1,34 +1,54 @@
 package ru.yandex.practicum.filmorate.service;
 
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.ValidationException.EntityNotFoundException;
 import ru.yandex.practicum.filmorate.ValidationException.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.Genre;
+import ru.yandex.practicum.filmorate.model.Mpa;
+
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
 import java.util.List;
 
 
+import java.util.Set;
+import java.util.stream.Collectors;
+
 @Service
 public class FilmServiceImpl implements FilmService {
 
     private final FilmStorage filmStorage;
     private final UserStorage userStorage;
+    private final MpaService mpaService;
+    private final GenreService genreService;
 
-    public FilmServiceImpl(FilmStorage filmStorage, UserStorage userStorage) {
+    public FilmServiceImpl(
+            @Qualifier("filmDbStorage") FilmStorage filmStorage,
+            @Qualifier("userDbStorage") UserStorage userStorage,
+            MpaService mpaService,
+            GenreService genreService) {
         this.filmStorage = filmStorage;
         this.userStorage = userStorage;
+        this.mpaService = mpaService;
+        this.genreService = genreService;
     }
 
     @Override
     public Film create(Film film) {
+
+        validateMpa(film.getMpa());
+
+        validateGenres(film.getGenres());
         return filmStorage.create(film);
     }
 
     @Override
     public Film get(long id) {
-        return filmStorage.get(id);
+        return filmStorage.get(id)
+                .orElseThrow(() -> new EntityNotFoundException("Фильм с ID " + id + " не найден"));
     }
 
     @Override
@@ -38,58 +58,78 @@ public class FilmServiceImpl implements FilmService {
 
     @Override
     public Film updateFilm(Film film) {
-
-        if (this.get(film.getId()) == null) {
-            throw new EntityNotFoundException("Film with id = " + film.getId() + " was not found");
+        if (film.getId() == null || film.getId() <= 0) {
+            throw new ValidationException("ID фильма должен быть указан и положительным");
         }
+
+        get(film.getId());
+
+        validateMpa(film.getMpa());
+
+        validateGenres(film.getGenres());
         return filmStorage.updateFilm(film);
     }
 
     @Override
-    public void addLike(long filmId, long userId) {
-        Film film = getFilm(filmId);
-        getUser(userId);
-
-        if (film.getLikes().contains(userId)) {
-            throw new ValidationException("Пользователь уже поставил лайк этому фильму");
-        }
-
-        film.getLikes().add(userId);
-        filmStorage.updateFilm(film);
+    public void addLike(long filmId, long userId) throws Throwable {
+        get(filmId);
+        userStorage.getUser(userId)
+                .orElseThrow(() -> new EntityNotFoundException("Пользователь с ID " + userId + " не найден"));
+        filmStorage.addLike(filmId, userId);
     }
 
     @Override
-    public void removeLike(long filmId, long userId) {
-        Film film = getFilm(filmId);
-        getUser(userId);
-
-        if (!film.getLikes().contains(userId)) {
-            throw new ValidationException("Пользователь не ставил лайк этому фильму");
-        }
-
-        film.getLikes().remove(userId);
-        filmStorage.updateFilm(film);
+    public void removeLike(long filmId, long userId) throws Throwable {
+        get(filmId);
+        userStorage.getUser(userId)
+                .orElseThrow(() -> new EntityNotFoundException("Пользователь с ID " + userId + " не найден"));
+        filmStorage.removeLike(filmId, userId);
     }
 
     @Override
     public List<Film> getPopularFilms(int count) {
-        if (count <= 0) {
-            throw new ValidationException("Count must be positive");
-        }
+
         return filmStorage.getPopularFilms(count);
     }
 
-    private Film getFilm(long filmId) {
-        Film film = filmStorage.get(filmId);
-        if (film == null) {
-            throw new EntityNotFoundException("Фильм с ID " + filmId + " не найден");
+    private void validateMpa(Mpa mpa) {
+        if (mpa == null) {
+            throw new ValidationException("MPA рейтинг обязателен");
         }
-        return film;
+        if (mpa.getId() == null) {
+            throw new ValidationException("ID MPA рейтинга обязателен");
+        }
+
+
+        mpaService.findById(mpa.getId());
     }
 
-    private void getUser(long userId) {
-        if (userStorage.getUser(userId) == null) {
-            throw new EntityNotFoundException("Пользователь с ID " + userId + " не найден");
+
+    private void validateGenres(List<Genre> genres) {
+        if (genres != null && !genres.isEmpty()) {
+
+            Set<Long> genreIds = genres.stream()
+                    .map(Genre::getId)
+                    .collect(Collectors.toSet());
+
+
+            if (genreIds.contains(null)) {
+                throw new ValidationException("ID жанра не может быть пустым");
+            }
+
+
+            List<Genre> existingGenres = genreService.findAllByIds(genreIds);
+
+
+            if (existingGenres.size() != genreIds.size()) {
+                Set<Long> existingIds = existingGenres.stream()
+                        .map(Genre::getId)
+                        .collect(Collectors.toSet());
+                Set<Long> missingIds = genreIds.stream()
+                        .filter(id -> !existingIds.contains(id))
+                        .collect(Collectors.toSet());
+                throw new EntityNotFoundException("Жанры с ID " + missingIds + " не найдены");
+            }
         }
     }
 }

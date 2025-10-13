@@ -15,10 +15,9 @@ public interface FilmService {
 
     Film updateFilm(Film film);
 
-    void addLike(long filmId, long userId);
+    void addLike(long filmId, long userId) throws Throwable;
 
-    void removeLike(long filmId, long userId);
+    void removeLike(long filmId, long userId) throws Throwable;
 
     List<Film> getPopularFilms(int count);
 }
-
