@@ -74,10 +74,6 @@ public class UserDbStorage implements UserStorage {
             List<User> users = jdbcTemplate.query(sql, userMapper, id);
             User user = users.stream().findFirst().orElse(null);
 
-            if (user != null) {
-
-            }
-
             return Optional.ofNullable(user);
         } catch (Exception e) {
             throw new ValidationException("Ошибка при получении пользователя с id: " + id + ": " + e.getMessage());
@@ -124,7 +120,6 @@ public class UserDbStorage implements UserStorage {
 
         return commonFriends;
     }
-
 
 
     private User mapRowToUser(ResultSet rs, int rowNum) throws SQLException {
