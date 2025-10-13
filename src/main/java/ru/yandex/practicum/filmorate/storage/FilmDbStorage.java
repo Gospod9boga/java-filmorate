@@ -81,6 +81,7 @@ public class FilmDbStorage implements FilmStorage {
 
             if (film != null) {
                 loadGenres(film);
+                loadLikes(film);
                 return Optional.of(film);
             }
             return Optional.empty();
@@ -95,9 +96,9 @@ public class FilmDbStorage implements FilmStorage {
             String sql = "SELECT f.*, m.name as mpa_name FROM films f " +
                     "LEFT JOIN mpa_ratings m ON f.mpa_rating_id = m.id";
             List<Film> films = jdbcTemplate.query(sql, FilmDbStorage::mapRowToFilm);
-
-
+            
             loadGenresForAllFilms(films);
+            loadLikesForAllFilms(films);
 
             return films;
         } catch (Exception e) {
@@ -142,6 +143,7 @@ public class FilmDbStorage implements FilmStorage {
             List<Film> films = jdbcTemplate.query(sql, FilmDbStorage::mapRowToFilm, count);
 
             loadGenresForAllFilms(films);
+            loadLikesForAllFilms(films);
 
             return films;
         } catch (Exception e) {

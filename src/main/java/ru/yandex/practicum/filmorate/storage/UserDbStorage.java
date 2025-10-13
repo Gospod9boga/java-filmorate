@@ -49,6 +49,7 @@ public class UserDbStorage implements UserStorage {
         List<User> users = jdbcTemplate.query(sql, userMapper);
 
         for (User user : users) {
+            loadFriends(user);
 
         }
 
@@ -73,7 +74,9 @@ public class UserDbStorage implements UserStorage {
             String sql = "SELECT * FROM users WHERE id = ?";
             List<User> users = jdbcTemplate.query(sql, userMapper, id);
             User user = users.stream().findFirst().orElse(null);
-
+            if (user != null) {
+                loadFriends(user);
+            }
             return Optional.ofNullable(user);
         } catch (Exception e) {
             throw new ValidationException("Ошибка при получении пользователя с id: " + id + ": " + e.getMessage());
@@ -81,9 +84,13 @@ public class UserDbStorage implements UserStorage {
     }
 
     @Override
-    public void addFriend(long userId, long friendId) {
-        String sql = "INSERT INTO friends (user_id, friend_id) VALUES (?, ?)";
-        jdbcTemplate.update(sql, userId, friendId);
+        public void addFriend(long userId, long friendId) {
+        try {
+            String sql = "INSERT INTO friends (user_id, friend_id) VALUES (?, ?)";
+            jdbcTemplate.update(sql, userId, friendId);
+        } catch (Exception e) {
+            throw new ValidationException("Ошибка при добавлении друга: " + e.getMessage());
+        }
     }
 
     @Override
@@ -100,6 +107,7 @@ public class UserDbStorage implements UserStorage {
         List<User> friends = jdbcTemplate.query(sql, userMapper, userId);
 
         for (User friend : friends) {
+            loadFriends(friend);
 
         }
 
@@ -115,10 +123,20 @@ public class UserDbStorage implements UserStorage {
         List<User> commonFriends = jdbcTemplate.query(sql, userMapper, userId, otherId);
 
         for (User friend : commonFriends) {
-
+            loadFriends(friend);
         }
 
         return commonFriends;
+    }
+
+    private void loadFriends(User user) {
+        try {
+            String sql = "SELECT friend_id FROM friends WHERE user_id = ?";
+            List<Long> friendIds = jdbcTemplate.query(sql, (rs, rowNum) -> rs.getLong("friend_id"), user.getId());
+            user.getFriends().addAll(friendIds);
+        } catch (Exception e) {
+            throw new ValidationException("Ошибка при загрузке друзей для пользователя " + user.getId() + ": " + e.getMessage());
+        }
     }
 
 
